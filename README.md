@@ -1,6 +1,6 @@
 # FB-Mamba Core
 
-This repository provides the core implementation of FB-Mamba in PyTorch.
+This repository provides the core FB-Mamba encoder implementation in PyTorch, together with synthetic-input tests.
 
 ## Contents
 
@@ -34,9 +34,11 @@ python -m pip install -r requirements.txt --index-url https://download.pytorch.o
 python smoke_test.py
 ```
 
-The three tests should finish with `OK`.
+The three synthetic-input tests should finish with `OK`.
 
 ## Usage
+
+The following example uses synthetic inputs to illustrate the encoder interface.
 
 ```python
 import torch

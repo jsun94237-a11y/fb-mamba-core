@@ -76,7 +76,7 @@ class SelectiveSSM(nn.Module):
     def selective_scan(self, x):
         """Selective scan with input-dependent parameters.
         
-        Uses parallel prefix scan for efficiency.
+        Evaluates the state recurrence sequentially over time.
         
         Args:
             x: (batch, seq_len, d_inner)
@@ -103,11 +103,8 @@ class SelectiveSSM(nn.Module):
         # B_bar * x: (B, L, d_inner, d_state)
         Bx = (delta.unsqueeze(-1) * B.unsqueeze(2)) * x.unsqueeze(-1)  # (B, L, d_inner, d_state)
         
-        # Parallel prefix scan: h[t] = A_bar[t] * h[t-1] + Bx[t]
-        # Use log-space cumsum for A, then compute via associative scan
-        # For moderate sequence lengths, chunked approach is efficient
-        
-        # Simple but fast: chunk into segments and process  
+        # Sequential state recurrence: h[t] = A_bar[t] * h[t-1] + Bx[t]
+        # Organize timesteps into chunks, carrying h across chunk boundaries.
         CHUNK = 16
         h = torch.zeros(batch, d_inner, self.d_state, device=x.device, dtype=x.dtype)
         all_h = []
@@ -116,7 +113,7 @@ class SelectiveSSM(nn.Module):
             end = min(start + CHUNK, seq_len)
             chunk_len = end - start
             
-            # Process chunk recurrently (short chunks are fast)
+            # Process timesteps in order within each chunk.
             chunk_h = []
             for t in range(start, end):
                 h = A_bar[:, t] * h + Bx[:, t]
